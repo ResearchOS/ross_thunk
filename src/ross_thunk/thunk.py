@@ -6,7 +6,7 @@ THUNK_STRING_REPR = "{fcn_hash}{delimiter}{n_outputs}"
 
 class Thunk:
     """A Python adaptation of the Thunk concept in Haskell for the purposes of building a data processing pipeline.
-    To create a Thunk, pass the function to be thunk-ified as the first argument, followed by the required additional metadata.
+    To create a Thunk, pass the function to be thunked as the first argument, followed by the number of output variables.
     """
 
     def __init__(self, 
