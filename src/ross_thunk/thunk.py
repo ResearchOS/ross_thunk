@@ -86,10 +86,9 @@ class PipelineThunk(Thunk):
         for i, arg in enumerate(args):
             inputs[f"arg_{i}"] = arg
         inputs.update(kwargs)
-        self.inputs = inputs        
+        self.inputs = inputs         
 
-        outputs = tuple(OutputThunk(pipeline_thunk=self, output_num=output_num, is_complete=self.is_complete, value=None) for output_num in range(thunk.n_outputs))
-        self.outputs = outputs   
+        self.outputs = tuple()  # Will be populated when the PipelineThunk is called
 
 
     @property
@@ -125,15 +124,16 @@ class PipelineThunk(Thunk):
                     return result[0]
                 return result
             
+        outputs = tuple(OutputThunk(pipeline_thunk=self, output_num=output_num, is_complete=is_complete, value = res) for output_num, res in enumerate(result))
+        self.outputs = outputs
         if self.thunk.n_outputs == 1:
-            outputs = OutputThunk(pipeline_thunk=self, output_num=0, is_complete=is_complete, value = result[0])
+            return outputs[0]
         else:
-            outputs = tuple(OutputThunk(pipeline_thunk=self, output_num=output_num, is_complete=is_complete, value = res) for output_num, res in enumerate(result))                    
-        return outputs
+            return outputs                
     
     
     def __repr__(self) -> str:
-        return f"PipelineThunk(fcn_name={self.fcn.__name__}, n_inputs={len(self.inputs)}, n_outputs={self.n_outputs}, hash={self.hash})"
+        return f"PipelineThunk(fcn_name={self.thunk.fcn.__name__}, n_inputs={len(self.inputs)}, n_outputs={self.thunk.n_outputs}, hash={self.hash})"
     
 
     @property
@@ -206,78 +206,20 @@ class OutputThunk(Thunk):
 
         self.hash = sha256(string_repr.encode()).hexdigest()
 
-    # Operator overloading to mimic the contained value
-    def __binary_op(self, other, op):
-        if self.value is None:
-            raise ValueError("OutputThunk value is not set.")
-        return op(self.value, other)
-
-    def __reverse_binary_op(self, other, op):
-        if self.value is None:
-            raise ValueError("OutputThunk value is not set.")
-        return op(other, self.value)
-
-    def __add__(self, other):
-        return self.__binary_op(other, lambda a, b: a + b)
-    def __radd__(self, other):
-        return self.__reverse_binary_op(other, lambda a, b: a + b)
-    def __sub__(self, other):
-        return self.__binary_op(other, lambda a, b: a - b)
-    def __rsub__(self, other):
-        return self.__reverse_binary_op(other, lambda a, b: a - b)
-    def __mul__(self, other):
-        return self.__binary_op(other, lambda a, b: a * b)
-    def __rmul__(self, other):
-        return self.__reverse_binary_op(other, lambda a, b: a * b)
-    def __truediv__(self, other):
-        return self.__binary_op(other, lambda a, b: a / b)
-    def __rtruediv__(self, other):
-        return self.__reverse_binary_op(other, lambda a, b: a / b)
-    def __floordiv__(self, other):
-        return self.__binary_op(other, lambda a, b: a // b)
-    def __rfloordiv__(self, other):
-        return self.__reverse_binary_op(other, lambda a, b: a // b)
-    def __mod__(self, other):
-        return self.__binary_op(other, lambda a, b: a % b)
-    def __rmod__(self, other):
-        return self.__reverse_binary_op(other, lambda a, b: a % b)
-    def __pow__(self, other):
-        return self.__binary_op(other, lambda a, b: a ** b)
-    def __rpow__(self, other):
-        return self.__reverse_binary_op(other, lambda a, b: a ** b)
-    def __getitem__(self, key):
-        if self.value is None:
-            raise ValueError("OutputThunk value is not set.")
-        return self.value[key]
-    def __len__(self):
-        if self.value is None:
-            raise ValueError("OutputThunk value is not set.")
-        return len(self.value)
-    def __contains__(self, item):
-        if self.value is None:
-            raise ValueError("OutputThunk value is not set.")
-        return item in self.value
-    def __bool__(self):
-        return bool(self.value)
-    def __int__(self):
-        return int(self.value)
-    def __float__(self):
-        return float(self.value)
-
     
     def __repr__(self):
         string_repr = "OutputThunk(source_fcn_name={source_thunk}, hash={hash}, value={value})"
         try:
                 return string_repr.format(
-                    source_thunk=self.pipeline_thunk.fcn.__name__,
+                    source_thunk=self.pipeline_thunk.thunk.fcn.__name__,
                     hash=self.hash,
-                    value=repr(self.value)
+                    value=str(self.value)
                 )
         except Exception:
                 return string_repr.format(
-                    source_thunk=self.pipeline_thunk.fcn.__name__,
+                    source_thunk=self.pipeline_thunk.thunk.fcn.__name__,
                     hash=self.hash,
-                    value=repr(self.value)
+                    value=str(self.value)
                 )
     
 

@@ -3,6 +3,8 @@ sys.path.append("/Users/mitchelltillman/Desktop/Not_Work/Code/Python_Projects/ro
 from ross_thunk.thunk import Thunk
 from ross_thunk.data_level import DataLevel
 
+from ross_thunk.build_dag import build_dag
+
 def example_fcn1(a: int, b: int) -> int:
     return a + b
 
@@ -21,11 +23,16 @@ example_fcn2_thunk = Thunk(
 
 # Create a simple pipeline
 a = 5
-b = 3
-result1 = example_fcn1_thunk(a, b, as_thunk=False)  # Should return 8
+# b = 3
+b = Thunk
+result1 = example_fcn1_thunk(a, b)  # Should return 8
 print(result1)
 result2 = example_fcn2_thunk(result1, a, b)  # Should return 0
 print(result2)
+
+dag = build_dag((example_fcn1_thunk, example_fcn2_thunk))
+for edge in dag.edges:
+    print(edge)
 
 # Create a more complex pipeline that dynamically loads data
 def load_data(file_path_format: str, **kwargs) -> list:    
@@ -55,3 +62,4 @@ data_levels = [
 ]
 for data_level in data_levels:
     data = load_data_thunk(file_path_format, subject=data_level['subject'], trial=data_level['trial'])  # Should load data from the specified file
+    saver.save(data, data_level)  # Simulate saving the processed data
