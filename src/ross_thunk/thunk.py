@@ -9,13 +9,15 @@ class Thunk:
     To create a Thunk, pass the function to be thunked as the first argument, followed by the number of output variables.
     """
 
+    thunk_db = None  # Placeholder for a ThunkDB instance, to persist Thunks to a database
+
     def __init__(self, 
                  fcn: Callable,
                  n_outputs: int
         ):
         self.fcn = fcn
         self.n_outputs = n_outputs
-        self.pipeline_thunks = tuple()  # Will hold a reference to the PipelineThunk when called
+        self.pipeline_thunks = tuple()  # Will hold a reference to each PipelineThunk created from this Thunk
 
         # Hash the function's bytecode to create a unique identifier for the thunk
         fcn_code = fcn.__code__.co_code
@@ -29,7 +31,7 @@ class Thunk:
         )
 
         # Hash the string representation to create the final hash
-        self.hash = sha256(string_repr.encode()).hexdigest()    
+        self.hash = sha256(string_repr.encode()).hexdigest()
     
 
     def __repr__(self):

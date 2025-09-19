@@ -11,7 +11,7 @@ def example_fcn1(a: int, b: int) -> int:
 def example_fcn2(total: int, a: int, b: int) -> int:
     return total - b - a
 
-example_fcn1_thunk = Thunk(
+example_fcn1 = Thunk(
     fcn=example_fcn1,
     n_outputs=1
 )
@@ -25,7 +25,7 @@ example_fcn2_thunk = Thunk(
 a = 5
 # b = 3
 b = Thunk
-result1 = example_fcn1_thunk(a, b)  # Should return 8
+result1 = example_fcn1(a, 3)  # Should return 8
 print(result1)
 result2 = example_fcn2_thunk(result1, a, b)  # Should return 0
 print(result2)
